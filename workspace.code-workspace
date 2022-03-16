@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "QuickSwap",
+			"path": "."
+		}
+	],
+	"settings": {
+		"solidity.compileUsingRemoteVersion": "v0.8.6+commit.11564f7e"
+	}
+}
