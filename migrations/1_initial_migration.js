@@ -1,5 +1,5 @@
-const QuickSwap = artifacts.require("QuickSwap");
+const UniSwapV3 = artifacts.require("UniSwapV3");
 
 module.exports = function (deployer) {
-  deployer.deploy(QuickSwap);
+  deployer.deploy(UniSwapV3);
 };
