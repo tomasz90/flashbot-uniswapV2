@@ -8,19 +8,19 @@ module.exports = {
     networks: {
         development: {
             host: "127.0.0.1", // Localhost (default: none)
-            port: 7545, // Standard Ethereum port (default: none)
+            port: 7546, // Standard Ethereum port (default: none)
             network_id: "*", // Any network (default: none)
-            gas: 10000000
+            gas: 100000000
         },
         matic: {
             provider: () => new HDWalletProvider(MNEMONIC, 
-            "https://rpc-mainnet.matic.quiknode.pro"),
+            "https://polygon-rpc.com/"),
             network_id: 137,
             confirmations: 2,
             timeoutBlocks: 50,
             skipDryRun: true,
-            gas: 1000000,
-            gasPrice: 50000000000,
+            gas: 1500000,
+            gasPrice: 60000000000,
         },
         ma: { // matic archive for debugging purpose
             provider: () => new HDWalletProvider(MNEMONIC, 
@@ -45,7 +45,7 @@ module.exports = {
     },
     compilers: {
         solc: {
-            version: "0.8.6"
+            version: '0.7.6'
         }
     }
 };
