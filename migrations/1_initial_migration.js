@@ -1,5 +1,5 @@
-const UniSwapV3 = artifacts.require("UniSwapV3");
+const UniSwapV3Quoter = artifacts.require("UniSwapV3Quoter");
 
 module.exports = function (deployer) {
-  deployer.deploy(UniSwapV3);
+  deployer.deploy(UniSwapV3Quoter);
 };

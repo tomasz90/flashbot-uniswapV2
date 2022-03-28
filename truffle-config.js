@@ -14,13 +14,13 @@ module.exports = {
         },
         matic: {
             provider: () => new HDWalletProvider(MNEMONIC, 
-            "https://polygon-rpc.com/"),
+            "https://matic-mainnet.chainstacklabs.com"),
             network_id: 137,
             confirmations: 2,
             timeoutBlocks: 50,
             skipDryRun: true,
             gas: 1500000,
-            gasPrice: 60000000000,
+            gasPrice: 90000000000,
         },
         ma: { // matic archive for debugging purpose
             provider: () => new HDWalletProvider(MNEMONIC, 
