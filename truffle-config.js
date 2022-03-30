@@ -8,7 +8,7 @@ module.exports = {
     networks: {
         development: {
             host: "127.0.0.1", // Localhost (default: none)
-            port: 7546, // Standard Ethereum port (default: none)
+            port: 7547, // Standard Ethereum port (default: none)
             network_id: "*", // Any network (default: none)
             gas: 100000000
         },
@@ -20,7 +20,7 @@ module.exports = {
             timeoutBlocks: 50,
             skipDryRun: true,
             gas: 1500000,
-            gasPrice: 90000000000,
+            gasPrice: 50000000000,
         },
         ma: { // matic archive for debugging purpose
             provider: () => new HDWalletProvider(MNEMONIC, 

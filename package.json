@@ -1,5 +1,5 @@
 {
-  "name": "QuickSwap",
+  "name": "UniswapV3",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -8,6 +8,7 @@
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.0",
     "git-init": "^1.0.0",
+    "solc": "^0.8.13",
     "truffle-hdwallet-provider": "^1.0.17"
   },
   "main": "truffle-config.js",
