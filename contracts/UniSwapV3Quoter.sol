@@ -8,6 +8,7 @@ import "@uniswap/v3-periphery/contracts/lens/Quoter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
 
 contract UniSwapV3Quoter {
+
     struct Quote {
         address pool;
         uint256 amount;
@@ -15,8 +16,11 @@ contract UniSwapV3Quoter {
 
     struct PoolInfo {
         address pool;
-        string token0;
-        string token1;
+        string tokenName0;
+        string tokenName1;
+        address tokenAddress0;
+        address tokenAddress1;
+        uint24 fee;
     }
 
     Quoter quoter = Quoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
@@ -31,25 +35,24 @@ contract UniSwapV3Quoter {
     }
 
     function getQuotes(address[] memory poolAddresses, uint[] memory amountsIn) public returns (Quote[] memory quotes) {
+        Quote[] memory quotes = new Quote[](poolAddresses.length);
         for (uint i=0; i < poolAddresses.length; i++) {
             quotes[i] = Quote(poolAddresses[i], getQuote(poolAddresses[i], amountsIn[i]));
         }
         return quotes;
     }
 
-    function getPoolsInfo(address[] memory poolAddresses)
-        public
-        view
-        returns (PoolInfo[] memory)
-    {
+    function getPoolsInfo(address[] memory poolAddresses) public view returns (PoolInfo[] memory) {
         PoolInfo[] memory infos = new PoolInfo[](poolAddresses.length);
-
         for (uint256 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
             IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
-            string memory token0 = ERC20(pool.token0()).name();
-            string memory token1 = ERC20(pool.token1()).name();
-            infos[i] = PoolInfo(poolAddress, token0, token1);
+            address tokenAddress0 = pool.token0();
+            address tokenAddress1 = pool.token1();
+            string memory tokenName0 = ERC20(tokenAddress0).name();
+            string memory tokenName1 = ERC20(tokenAddress1).name();
+            uint24 fee = pool.fee();
+            infos[i] = PoolInfo(poolAddress, tokenName0, tokenName1, tokenAddress0, tokenAddress1, fee);
         }
         return infos;
     }
