@@ -29,10 +29,17 @@ contract UniSwapV3Quoter {
         address tokenIn,
         address tokenOut,
         uint256 amount
-    ) public returns (uint256) {
+    ) public returns (Quote memory) {
         IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
         uint24 fee = pool.fee();
-        return quoter.quoteExactInputSingle(tokenIn, tokenOut, fee, amount, 0);
+        uint256 amountOut = quoter.quoteExactInputSingle(
+            tokenIn,
+            tokenOut,
+            fee,
+            amount,
+            0
+        );
+        return Quote(poolAddress, amountOut);
     }
 
     function getQuotes(
@@ -43,13 +50,8 @@ contract UniSwapV3Quoter {
     ) public returns (Quote[] memory) {
         Quote[] memory quotes = new Quote[](poolAddresses.length);
         for (uint256 i = 0; i < poolAddresses.length; i++) {
-            uint256 amountOut = getQuote(
-                poolAddresses[i],
-                tokenIn[i],
-                tokenOut[i],
-                amounts[i]
-            );
-            quotes[i] = Quote(poolAddresses[i], amountOut);
+            (Quote memory quote) = getQuote(poolAddresses[i], tokenIn[i], tokenOut[i], amounts[i]);
+            quotes[i] = quote;
         }
         return quotes;
     }
