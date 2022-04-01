@@ -15,11 +15,15 @@ contract UniSwapV3Quoter {
 
     struct PoolInfo {
         address pool;
-        string tokenName0;
-        string tokenName1;
-        address tokenAddress0;
-        address tokenAddress1;
+        Token token0;
+        Token token1;
         uint24 fee;
+    }
+
+    struct Token {
+        string name;
+        address tokenAddress;
+        uint8 decimals;
     }
 
     Quoter quoter = Quoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
@@ -65,17 +69,18 @@ contract UniSwapV3Quoter {
         for (uint256 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
             IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
-            address tokenAddress0 = pool.token0();
-            address tokenAddress1 = pool.token1();
-            string memory tokenName0 = ERC20(tokenAddress0).name();
-            string memory tokenName1 = ERC20(tokenAddress1).name();
+
+            ERC20 token0ERC20 = ERC20(pool.token0());
+            ERC20 token1ERC20 = ERC20(pool.token1());
+
+            Token memory token0 = Token(token0ERC20.name(), address(token0ERC20), token0ERC20.decimals());
+            Token memory token1 = Token(token1ERC20.name(), address(token1ERC20), token1ERC20.decimals());
+
             uint24 fee = pool.fee();
             infos[i] = PoolInfo(
                 poolAddress,
-                tokenName0,
-                tokenName1,
-                tokenAddress0,
-                tokenAddress1,
+                token0,
+                token1,
                 fee
             );
         }
@@ -85,4 +90,5 @@ contract UniSwapV3Quoter {
 
 contract ERC20 {
     function name() public view virtual returns (string memory) {}
+    function decimals() public view virtual returns (uint8) {}
 }
