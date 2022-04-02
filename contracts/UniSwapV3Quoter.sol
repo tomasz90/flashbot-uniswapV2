@@ -8,54 +8,19 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3FlashCallback.sol';
 
-import "@uniswap/v3-periphery/contracts/lens/Quoter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
+import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 
 contract UniSwapV3Quoter is IUniswapV3FlashCallback {
 
-    Quoter public immutable quoter = Quoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
+    IQuoterV2 public immutable quoter = IQuoterV2(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
     ISwapRouter public immutable swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
     IUniswapV3Factory public immutable uniswapFactory = IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
 
-    function getQuote(
-        address poolAddress,
-        address tokenIn,
-        address tokenOut,
-        uint256 amount
-    ) public returns (Quote memory) {
-        IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
-        uint24 fee = pool.fee();
-        uint256 amountOut = quoter.quoteExactInputSingle(
-            tokenIn,
-            tokenOut,
-            fee,
-            amount,
-            0
-        );
-        return Quote(poolAddress, amountOut);
-    }
-
-    function getQuotes(
-        address[] memory poolAddresses,
-        address[] memory tokenIn,
-        address[] memory tokenOut,
-        uint256[] memory amounts
-    ) public returns (Quote[] memory) {
-        Quote[] memory quotes = new Quote[](poolAddresses.length);
-        for (uint256 i = 0; i < poolAddresses.length; i++) {
-            (Quote memory quote) = getQuote(poolAddresses[i], tokenIn[i], tokenOut[i], amounts[i]);
-            quotes[i] = quote;
-        }
-        return quotes;
-    }
-
-    function getPoolsInfo(address[] memory poolAddresses)
-        public
-        view
-        returns (PoolInfo[] memory)
-    {
+    
+    function getPoolsInfo(address[] memory poolAddresses) public view returns (PoolInfo[] memory) {
         PoolInfo[] memory infos = new PoolInfo[](poolAddresses.length);
         for (uint256 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
@@ -78,20 +43,21 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         return infos;
     }
 
-    function multiSwap(bytes memory path, uint256 amountIn) public returns(uint256) {
-        ISwapRouter.ExactInputParams memory params =
-            ISwapRouter.ExactInputParams({
-                path: path,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: 0
-            });
-            
-        uint256 amountOut = swapRouter.exactInput(params);
+    function evaluatePaths(bytes[] memory paths, uint256[] memory amountsIn) external returns(bytes memory) {
+        uint256 highestRatio = 0;
+        uint256 highestIndex = 0;
+        for(uint256 i = 0; i < paths.length; i++) {
+            (uint256 amountOut,,,) = quoter.quoteExactInput(paths[i], amountsIn[i]);
+            uint256 ratio = amountOut * 100000 / amountsIn[i];
+            if(ratio > highestRatio) {
+                highestRatio = ratio;
+                highestIndex = i;
+            }
+        }
+        return paths[highestIndex];
     }
 
-    function initFlash(bytes memory path, uint256 amountIn) external {
+    function initFlashSwap(bytes memory path, uint256 amountIn) external {
         (address tokenIn, address tokenOut, uint24 poolFee) = Path.decodeFirstPool(path);
         
         IUniswapV3Pool pool = IUniswapV3Pool(uniswapFactory.getPool(tokenIn, tokenOut, poolFee));
@@ -104,19 +70,34 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         pool.flash(address(this), amount0, amount1, data);
     }
 
-     function uniswapV3FlashCallback(uint256 fee0, uint256 fee1, bytes calldata data) external override {
-         
-     }
+    function uniswapV3FlashCallback(uint256 fee0, uint256 fee1, bytes calldata data) external override {
+        FlashCallbackData memory data = abi.decode(data, (FlashCallbackData));
+
+        uint256 amountOut = multiSwap(data.path, data.amountIn);
+
+        uint256 amountOwned = fee0 != 0 ? fee0 : fee1;
+        amountOwned += data.amountIn;
+
+        (address tokenIn,,) = Path.decodeFirstPool(data.path);
+        TransferHelper.safeApprove(tokenIn, address(this), amountOwned);
+    }
+    
+    function multiSwap(bytes memory path, uint256 amountIn) public returns(uint256) {
+        ISwapRouter.ExactInputParams memory params =
+            ISwapRouter.ExactInputParams({
+                path: path,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: 0
+            });        
+        return swapRouter.exactInput(params);
+    }
 }
 
 contract ERC20 {
     function name() public view virtual returns (string memory) {}
     function decimals() public view virtual returns (uint8) {}
-}
-
-struct Quote {
-    address pool;
-    uint256 amount;
 }
 
 struct PoolInfo {
@@ -130,13 +111,6 @@ struct Token {
     string name;
     address tokenAddress;
     uint8 decimals;
-}
-
-struct ExactInputParams {
-    bytes path;
-    address recipient;
-    uint256 amountIn;
-    uint256 amountOutMinimum;
 }
 
 struct FlashCallbackData {
