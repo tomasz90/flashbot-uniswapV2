@@ -6,16 +6,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
-import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3FlashCallback.sol';
-
-import "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
+import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3FlashCallback.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
-import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
 contract UniSwapV3Quoter is IUniswapV3FlashCallback {
 
-    IQuoterV2 public immutable quoter = IQuoterV2(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
+    IQuoter public immutable quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
     ISwapRouter public immutable swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
     IUniswapV3Factory public immutable uniswapFactory = IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
 
@@ -47,8 +46,8 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         uint256 highestRatio = 0;
         uint256 highestIndex = 0;
         for(uint256 i = 0; i < paths.length; i++) {
-            (uint256 amountOut,,,) = quoter.quoteExactInput(paths[i], amountsIn[i]);
-            uint256 ratio = amountOut * 100000 / amountsIn[i];
+            uint256 amountOut = quoter.quoteExactInput(paths[i], amountsIn[i]);
+            uint256 ratio = amountOut * 10000 / amountsIn[i];
             if(ratio > highestRatio) {
                 highestRatio = ratio;
                 highestIndex = i;
