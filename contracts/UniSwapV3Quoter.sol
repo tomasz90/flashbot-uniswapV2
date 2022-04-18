@@ -42,18 +42,18 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         return infos;
     }
 
-    function evaluatePaths(bytes[] memory paths, uint256[] memory amountsIn) external returns(bytes memory) {
+    function evaluatePaths(bytes[] memory paths, uint256[] memory amountsIn) external returns(bytes memory, uint256) {
         uint256 highestRatio = 0;
         uint256 highestIndex = 0;
         for(uint256 i = 0; i < paths.length; i++) {
             uint256 amountOut = quoter.quoteExactInput(paths[i], amountsIn[i]);
-            uint256 ratio = amountOut * 10000 / amountsIn[i];
+            uint256 ratio = amountOut * 100000 / amountsIn[i];
             if(ratio > highestRatio) {
                 highestRatio = ratio;
                 highestIndex = i;
             }
         }
-        return paths[highestIndex];
+        return (paths[highestIndex], highestRatio);
     }
 
     function initFlashSwap(bytes memory path, uint256 amountIn) external {

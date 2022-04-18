@@ -19,7 +19,7 @@ module.exports = {
             confirmations: 2,
             timeoutBlocks: 50,
             skipDryRun: true,
-            gas: 1500000,
+            gas: 4000000,
             gasPrice: 50000000000,
         },
         ma: { // matic archive for debugging purpose
