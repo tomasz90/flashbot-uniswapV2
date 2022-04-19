@@ -11,14 +11,16 @@ import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 
 contract UniSwapV3Quoter is IUniswapV3FlashCallback {
 
     IQuoter public immutable quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
     ISwapRouter public immutable swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
-    IUniswapV3Factory public immutable uniswapFactory = IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
-
+    IUniswapV3Factory public immutable uniswapFactoryV3 = IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
+    IUniswapV2Factory public immutable quickswapFactoryV2 = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
     
     function getPoolsInfo(address[] memory poolAddresses) public view returns (PoolInfo[] memory) {
         PoolInfo[] memory infos = new PoolInfo[](poolAddresses.length);
@@ -37,11 +39,29 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         return infos;
     }
 
+    function getReserveInfo(address[] memory tokenIn, address[] memory tokenOut) public view returns(ReserveInfo[] memory) {
+        require(tokenIn.length == tokenOut.length, "Params arrays have different sizes");
+        ReserveInfo[] memory infos = new ReserveInfo[](tokenIn.length);
+        for(uint256 i = 0; i < tokenIn.length; i++) {
+            IUniswapV2Pair pool = IUniswapV2Pair(quickswapFactoryV2.getPair(tokenIn[i], tokenOut[i]));
+            (uint256 reserveAmount0, uint256 reserveAmount1,) = pool.getReserves();
+            if(tokenIn[i] != pool.token0()) {
+                uint256 tempReserve0 = reserveAmount0;
+                reserveAmount0 = reserveAmount1;
+                reserveAmount1 = tempReserve0;
+            }
+            Reserve memory reserve0 = Reserve(tokenIn[i], reserveAmount0);
+            Reserve memory reserve1 = Reserve(tokenOut[i], reserveAmount1);
+            infos[i] = ReserveInfo(reserve0, reserve1);
+        }
+        return infos;
+    }
+
 
     function initFlashSwap(bytes memory path, uint256 amountIn) external {
         (address tokenIn, address tokenOut, uint24 poolFee) = Path.decodeFirstPool(path);
         
-        IUniswapV3Pool pool = IUniswapV3Pool(uniswapFactory.getPool(tokenIn, tokenOut, poolFee));
+        IUniswapV3Pool pool = IUniswapV3Pool(uniswapFactoryV3.getPool(tokenIn, tokenOut, poolFee));
 
         uint256 amount0 = tokenIn == pool.token0() ? amountIn : 0;
         uint256 amount1 = tokenOut == pool.token0() ? amountIn : 0;
@@ -85,6 +105,16 @@ struct PoolInfo {
     address pool;
     Token token0;
     Token token1;
+}
+
+struct ReserveInfo {
+    Reserve reserve0;
+    Reserve reserve1;
+}
+
+struct Reserve {
+    address token;
+    uint256 reserve;
 }
 
 struct Token {
