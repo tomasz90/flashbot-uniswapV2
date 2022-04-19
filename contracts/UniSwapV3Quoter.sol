@@ -11,6 +11,7 @@ import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 
 contract UniSwapV3Quoter is IUniswapV3FlashCallback {
 
@@ -23,7 +24,7 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         PoolInfo[] memory infos = new PoolInfo[](poolAddresses.length);
         for (uint256 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
-            IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
+            IUniswapV2Pair pool = IUniswapV2Pair(poolAddress);
 
             ERC20 token0ERC20 = ERC20(pool.token0());
             ERC20 token1ERC20 = ERC20(pool.token1());
@@ -31,30 +32,11 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
             Token memory token0 = Token(token0ERC20.name(), address(token0ERC20), token0ERC20.decimals());
             Token memory token1 = Token(token1ERC20.name(), address(token1ERC20), token1ERC20.decimals());
 
-            uint24 fee = pool.fee();
-            infos[i] = PoolInfo(
-                poolAddress,
-                token0,
-                token1,
-                fee
-            );
+            infos[i] = PoolInfo(poolAddress, token0, token1);
         }
         return infos;
     }
 
-    function evaluatePaths(bytes[] memory paths, uint256[] memory amountsIn) external returns(bytes memory, uint256) {
-        uint256 highestRatio = 0;
-        uint256 highestIndex = 0;
-        for(uint256 i = 0; i < paths.length; i++) {
-            uint256 amountOut = quoter.quoteExactInput(paths[i], amountsIn[i]);
-            uint256 ratio = amountOut * 100000 / amountsIn[i];
-            if(ratio > highestRatio) {
-                highestRatio = ratio;
-                highestIndex = i;
-            }
-        }
-        return (paths[highestIndex], highestRatio);
-    }
 
     function initFlashSwap(bytes memory path, uint256 amountIn) external {
         (address tokenIn, address tokenOut, uint24 poolFee) = Path.decodeFirstPool(path);
@@ -103,7 +85,6 @@ struct PoolInfo {
     address pool;
     Token token0;
     Token token1;
-    uint24 fee;
 }
 
 struct Token {
