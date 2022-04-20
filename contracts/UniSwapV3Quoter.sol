@@ -39,20 +39,14 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
         return infos;
     }
 
-    function getReserveInfo(address[] memory tokenIn, address[] memory tokenOut) public view returns(ReserveInfo[] memory) {
-        require(tokenIn.length == tokenOut.length, "Params arrays have different sizes");
-        ReserveInfo[] memory infos = new ReserveInfo[](tokenIn.length);
-        for(uint256 i = 0; i < tokenIn.length; i++) {
-            IUniswapV2Pair pool = IUniswapV2Pair(quickswapFactoryV2.getPair(tokenIn[i], tokenOut[i]));
+    function getReserveInfo(address[] memory pools) public view returns(ReserveInfo[] memory) {
+        ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
+        for(uint256 i = 0; i < pools.length; i++) {
+            IUniswapV2Pair pool = IUniswapV2Pair(pools[i]);
             (uint256 reserveAmount0, uint256 reserveAmount1,) = pool.getReserves();
-            if(tokenIn[i] != pool.token0()) {
-                uint256 tempReserve0 = reserveAmount0;
-                reserveAmount0 = reserveAmount1;
-                reserveAmount1 = tempReserve0;
-            }
-            Reserve memory reserve0 = Reserve(tokenIn[i], reserveAmount0);
-            Reserve memory reserve1 = Reserve(tokenOut[i], reserveAmount1);
-            infos[i] = ReserveInfo(reserve0, reserve1);
+            Reserve memory reserve0 = Reserve(pool.token0(), reserveAmount0);
+            Reserve memory reserve1 = Reserve(pool.token1(), reserveAmount1);
+            infos[i] = ReserveInfo(address(pool), reserve0, reserve1);
         }
         return infos;
     }
@@ -108,6 +102,7 @@ struct PoolInfo {
 }
 
 struct ReserveInfo {
+    address poolAddress;
     Reserve reserve0;
     Reserve reserve1;
 }
