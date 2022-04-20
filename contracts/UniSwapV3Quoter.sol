@@ -21,12 +21,12 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
     ISwapRouter public immutable swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
     IUniswapV3Factory public immutable uniswapFactoryV3 = IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
     IUniswapV2Factory public immutable quickswapFactoryV2 = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
-    
-    function getPoolsInfo(address[] memory poolAddresses) public view returns (PoolInfo[] memory) {
-        PoolInfo[] memory infos = new PoolInfo[](poolAddresses.length);
-        for (uint256 i = 0; i < poolAddresses.length; i++) {
-            address poolAddress = poolAddresses[i];
-            IUniswapV2Pair pool = IUniswapV2Pair(poolAddress);
+
+    function getReservesInfo(address[] memory pools) public view returns(ReserveInfo[] memory) {
+        ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
+        for(uint256 i = 0; i < pools.length; i++) {
+            IUniswapV2Pair pool = IUniswapV2Pair(pools[i]);
+            (uint256 reserveAmount0, uint256 reserveAmount1,) = pool.getReserves();
 
             ERC20 token0ERC20 = ERC20(pool.token0());
             ERC20 token1ERC20 = ERC20(pool.token1());
@@ -34,18 +34,9 @@ contract UniSwapV3Quoter is IUniswapV3FlashCallback {
             Token memory token0 = Token(token0ERC20.name(), address(token0ERC20), token0ERC20.decimals());
             Token memory token1 = Token(token1ERC20.name(), address(token1ERC20), token1ERC20.decimals());
 
-            infos[i] = PoolInfo(poolAddress, token0, token1);
-        }
-        return infos;
-    }
+            Reserve memory reserve0 = Reserve(token0, reserveAmount0);
+            Reserve memory reserve1 = Reserve(token1, reserveAmount1);
 
-    function getReserveInfo(address[] memory pools) public view returns(ReserveInfo[] memory) {
-        ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
-        for(uint256 i = 0; i < pools.length; i++) {
-            IUniswapV2Pair pool = IUniswapV2Pair(pools[i]);
-            (uint256 reserveAmount0, uint256 reserveAmount1,) = pool.getReserves();
-            Reserve memory reserve0 = Reserve(pool.token0(), reserveAmount0);
-            Reserve memory reserve1 = Reserve(pool.token1(), reserveAmount1);
             infos[i] = ReserveInfo(address(pool), reserve0, reserve1);
         }
         return infos;
@@ -95,12 +86,6 @@ contract ERC20 {
     function decimals() public view virtual returns (uint8) {}
 }
 
-struct PoolInfo {
-    address pool;
-    Token token0;
-    Token token1;
-}
-
 struct ReserveInfo {
     address poolAddress;
     Reserve reserve0;
@@ -108,7 +93,7 @@ struct ReserveInfo {
 }
 
 struct Reserve {
-    address token;
+    Token token;
     uint256 reserve;
 }
 
