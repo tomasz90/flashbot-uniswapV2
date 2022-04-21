@@ -41,7 +41,7 @@ contract UniSwapV3Quoter is IUniswapV2Callee, Ownable{
         uint256 amount0Out = pool.token0() == tokenIn[0] ? amountIn : 0;
         uint256 amount1Out = pool.token1() == tokenOut[0] ? 0 : amountIn;
 
-        pool.swap(amount0Out, amount1Out, address(this), bytes("initFlashSwap"));
+        pool.swap(amount0Out, amount1Out, address(this), path);
     }
 
     // this function is called after triggering flashswap
