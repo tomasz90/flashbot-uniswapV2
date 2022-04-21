@@ -8,7 +8,7 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
 
-contract UniSwapV3Quoter is IUniswapV2Callee {
+contract UniSwapV3Quoter is IUniswapV2Callee, Ownable{
     
     IUniswapV2Factory public immutable uniswapFactory = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
 
@@ -33,7 +33,7 @@ contract UniSwapV3Quoter is IUniswapV2Callee {
         return infos;
     }
 
-    function initSwap(uint amountIn, bytes calldata path) external {
+    function initSwap(uint amountIn, bytes calldata path) external onlyOwner {
         (address[] memory tokenIn, address[] memory tokenOut) = abi.decode(path, (address[], address[]));
         
         IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[0], tokenOut[0]));
@@ -67,6 +67,12 @@ contract UniSwapV3Quoter is IUniswapV2Callee {
         require(amountHave > amountOwed, "Not able to return enough amount");
         address firstPool = uniswapFactory.getPair(tokenIn[0], tokenOut[0]);
         IERC20(tokenIn[0]).transfer(firstPool, amountOwed);
+    }
+
+    function withdraw(address token) external onlyOwner {
+        ERC20 erc20 = ERC20(token);
+        uint256 balance = erc20.balanceOf(address(this));
+        erc20.transfer(owner(), balance);
     }
 }
 
