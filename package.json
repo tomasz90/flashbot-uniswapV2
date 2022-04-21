@@ -4,12 +4,16 @@
   "private": true,
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
+    "@studydefi/money-legos": "^2.4.2",
     "@truffle/hdwallet-provider": "^2.0.0",
     "@uniswap/swap-router-contracts": "^1.2.0",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.0",
+    "ethereum-waffle": "^3.4.4",
     "git-init": "^1.0.0",
-    "solc": "^0.8.13"
+    "solc": "^0.8.13",
+    "truffle-hdwallet-provider": "^1.0.17"
   },
   "main": "truffle-config.js",
   "directories": {
@@ -21,5 +25,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "devDependencies": {}
+  "devDependencies": {
+    "chai": "^4.3.6"
+  }
 }

@@ -10,7 +10,7 @@ module.exports = {
             host: "127.0.0.1", // Localhost (default: none)
             port: 7547, // Standard Ethereum port (default: none)
             network_id: "*", // Any network (default: none)
-            gas: 100000000
+            gas: 10000000
         },
         matic: {
             provider: () => new HDWalletProvider(MNEMONIC, 
@@ -31,8 +31,8 @@ module.exports = {
             skipDryRun: true,
             gas: 6000000,
             gasPrice: 25000000000,
-            pollingInterval: 18000,
-            networkCheckTimeout: 1000000,
+            pollingInterval: 1800000000,
+            networkCheckTimeout: 10000000,
             disableConfirmationListener: true
         },
         bsc: {

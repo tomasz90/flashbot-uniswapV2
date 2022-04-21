@@ -8,7 +8,7 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
 
-contract UniSwapV3Quoter is IUniswapV2Callee, Ownable{
+contract UniSwapV3Quoter is IUniswapV2Callee, Ownable {
     
     IUniswapV2Factory public immutable uniswapFactory = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
 
@@ -38,8 +38,7 @@ contract UniSwapV3Quoter is IUniswapV2Callee, Ownable{
         
         IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[0], tokenOut[0]));
 
-        uint256 amount0Out = pool.token0() == tokenIn[0] ? amountIn : 0;
-        uint256 amount1Out = pool.token1() == tokenOut[0] ? 0 : amountIn;
+        (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[0] ? (amountIn, uint(0)) : (0, amountIn);
 
         pool.swap(amount0Out, amount1Out, address(this), path);
     }
@@ -51,19 +50,18 @@ contract UniSwapV3Quoter is IUniswapV2Callee, Ownable{
         assert(msg.sender == IUniswapV2Factory(uniswapFactory).getPair(token0, token1));
 
         (address[] memory tokenIn, address[] memory tokenOut) = abi.decode(data, (address[], address[]));
-        
-        uint256 amountIn = amount0 == 0 ? amount1 : amount0;
-        uint256 amountOwed = amountIn * 1000 / 997;
 
-        for(uint i = 0; i < tokenIn.length; i++) {
+        uint amountIn = ERC20(tokenOut[0]).balanceOf(address(this));
+        
+        for(uint i = 1; i < tokenIn.length; i++) {
             IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[i], tokenOut[i]));
-            uint256 amount0Out = pool.token0() == tokenIn[i] ? amountIn : 0;
-            uint256 amount1Out = pool.token1() == tokenOut[i] ? 0 : amountIn;
+            (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[i] ? (amountIn, uint(0)) : (0, amountIn);
             pool.swap(amount0Out, amount1Out, address(this), new bytes(0));
             amountIn = ERC20(tokenOut[i]).balanceOf(address(this));
         }
 
         uint256 amountHave = IERC20(tokenIn[0]).balanceOf(address(this));
+        uint amountOwed = (amount0 == 0 ? amount1 : amount0) * 1000 / 997;
         require(amountHave > amountOwed, "Not able to return enough amount");
         address firstPool = uniswapFactory.getPair(tokenIn[0], tokenOut[0]);
         IERC20(tokenIn[0]).transfer(firstPool, amountOwed);
