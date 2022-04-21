@@ -31,6 +31,9 @@ module.exports = {
             skipDryRun: true,
             gas: 6000000,
             gasPrice: 25000000000,
+            pollingInterval: 18000,
+            networkCheckTimeout: 1000000,
+            disableConfirmationListener: true
         },
         bsc: {
         provider: () => new HDWalletProvider(MNEMONIC, 
