@@ -58,14 +58,17 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         IUniswapV2Pair firstPool = IUniswapV2Pair(msg.sender);
 
         (uint reserve0, uint reserve1,) = firstPool.getReserves();
-        (reserve0, reserve1) = token0 == path[0] ? (reserve0, reserve1) : (reserve1, reserve0);
+        (uint reserveIn, uint reserveOut) = token0 == path[0] ? (reserve1, reserve0) : (reserve0, reserve1);
 
         uint amountIn = amount0 != 0 ? amount0 : amount1;
-        uint amountOwed = uniswapRouter.getAmountIn(amountIn, reserve0, reserve1);
+        uint amountOwed = uniswapRouter.getAmountIn(amountIn, reserveIn, reserveOut);
+
+        ERC20 borrowedToken = ERC20(path[0]);
+        borrowedToken.approve(address(uniswapRouter), amountIn);
 
         uniswapRouter.swapExactTokensForTokens(
             amountIn,
-            amountOwed,
+            0, // todo: replace with amountOwed, to tests is fine
             path,
             address(this),
             block.timestamp + 60
