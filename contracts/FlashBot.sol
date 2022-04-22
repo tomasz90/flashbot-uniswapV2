@@ -8,11 +8,12 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
 import './UniswapV2Router02.sol';
+import './ConstantsLibrary.sol';
 
 contract FlashBot is IUniswapV2Callee, Ownable {
     
-    IUniswapV2Factory public immutable uniswapFactory = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
-    UniswapV2Router02 public immutable uniswapRouter = UniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff);
+    IUniswapV2Factory public immutable uniswapFactory = IUniswapV2Factory(ConstantsLibrary.factory);
+    UniswapV2Router02 public immutable uniswapRouter = UniswapV2Router02(ConstantsLibrary.router);
 
     function getReservesInfo(address[] memory pools) public view returns (ReserveInfo[] memory) {
         ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
