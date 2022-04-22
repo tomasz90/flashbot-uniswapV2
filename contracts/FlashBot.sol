@@ -4,9 +4,11 @@ pragma abicoder v2;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
+
 import './UniswapV2Router02.sol';
 import './ConstantsLibrary.sol';
 
@@ -36,14 +38,14 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         return infos;
     }
 
-    function initSwap(uint amountIn, bytes calldata path) external onlyOwner {
-        (address[] memory tokenIn, address[] memory tokenOut) = abi.decode(path, (address[], address[]));
+    function initSwap(uint amountIn, bytes calldata data) external onlyOwner {
+        (address[] memory path) = abi.decode(data, (address[]));
         
-        IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[0], tokenOut[0]));
+        IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(path[0], path[path.length-1]));
 
-        (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[0] ?  (uint(0), amountIn) : (amountIn, 0);
+        (uint amount0Out, uint amount1Out) = pool.token0() == path[0] ? (amountIn, 0) : (uint(0), amountIn);
 
-        pool.swap(amount0Out, amount1Out, address(this), path);
+        pool.swap(amount0Out, amount1Out, address(this), data);
     }
 
     // this function is called after triggering flashswap
@@ -52,27 +54,25 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         address token1 = IUniswapV2Pair(msg.sender).token1();
         assert(msg.sender == IUniswapV2Factory(uniswapFactory).getPair(token0, token1));
 
-        (address[] memory tokenIn, address[] memory tokenOut) = abi.decode(data, (address[], address[]));
-
-        uint amountIn = amount0 != 0 ? amount0 : amount1;
-
-        for(uint i = 1; i < tokenIn.length; i++) {
-            IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[i], tokenOut[i]));
-            (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[i] ? (amountIn, uint(0)) : (0, amountIn);
-            pool.swap(amount0Out, amount1Out, address(this), new bytes(0));
-            amountIn = ERC20(tokenOut[i]).balanceOf(address(this));
-        }
-
+        (address[] memory path) = abi.decode(data, (address[]));
         IUniswapV2Pair firstPool = IUniswapV2Pair(msg.sender);
 
         (uint reserve0, uint reserve1,) = firstPool.getReserves();
+        (reserve0, reserve1) = token0 == path[0] ? (reserve0, reserve1) : (reserve1, reserve0);
 
-        (reserve0, reserve1) = token0 == tokenOut[0] ? (reserve0, reserve1) : (reserve1, reserve0);
-
-        uint amountHave = IERC20(tokenIn[0]).balanceOf(address(this));
+        uint amountIn = amount0 != 0 ? amount0 : amount1;
         uint amountOwed = uniswapRouter.getAmountIn(amountIn, reserve0, reserve1);
-        require(amountHave > amountOwed, "Not able to return enough amount");
-        IERC20(tokenIn[0]).transfer(msg.sender, amountOwed);
+
+        uniswapRouter.swapExactTokensForTokens(
+            amountIn,
+            amountOwed,
+            path,
+            address(this),
+            block.timestamp + 60
+        );
+
+        address tokenOwed = path[path.length-1];
+        ERC20(tokenOwed).transfer(msg.sender, amountOwed);
     }
 
     function withdraw(address token) external onlyOwner {
