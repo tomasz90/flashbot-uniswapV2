@@ -66,6 +66,9 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         ERC20 borrowedToken = ERC20(path[0]);
         borrowedToken.approve(address(uniswapRouter), amountIn);
 
+        ERC20 borrowedToken = ERC20(path[0]);
+        borrowedToken.approve(address(uniswapRouter), amountIn);
+
         uniswapRouter.swapExactTokensForTokens(
             amountIn,
             0, // todo: replace with amountOwed, to tests is fine
