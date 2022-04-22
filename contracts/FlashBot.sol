@@ -2,15 +2,17 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
+import './UniswapV2Router02.sol';
 
-contract UniSwapV3Quoter is IUniswapV2Callee, Ownable {
+contract FlashBot is IUniswapV2Callee, Ownable {
     
     IUniswapV2Factory public immutable uniswapFactory = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
+    UniswapV2Router02 public immutable uniswapRouter = UniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff);
 
     function getReservesInfo(address[] memory pools) public view returns (ReserveInfo[] memory) {
         ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
@@ -38,7 +40,7 @@ contract UniSwapV3Quoter is IUniswapV2Callee, Ownable {
         
         IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[0], tokenOut[0]));
 
-        (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[0] ? (amountIn, uint(0)) : (0, amountIn);
+        (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[0] ?  (uint(0), amountIn) : (amountIn, 0);
 
         pool.swap(amount0Out, amount1Out, address(this), path);
     }
@@ -51,8 +53,8 @@ contract UniSwapV3Quoter is IUniswapV2Callee, Ownable {
 
         (address[] memory tokenIn, address[] memory tokenOut) = abi.decode(data, (address[], address[]));
 
-        uint amountIn = ERC20(tokenOut[0]).balanceOf(address(this));
-        
+        uint amountIn = amount0 != 0 ? amount0 : amount1;
+
         for(uint i = 1; i < tokenIn.length; i++) {
             IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(tokenIn[i], tokenOut[i]));
             (uint amount0Out, uint amount1Out) = pool.token0() == tokenIn[i] ? (amountIn, uint(0)) : (0, amountIn);
@@ -60,11 +62,16 @@ contract UniSwapV3Quoter is IUniswapV2Callee, Ownable {
             amountIn = ERC20(tokenOut[i]).balanceOf(address(this));
         }
 
-        uint256 amountHave = IERC20(tokenIn[0]).balanceOf(address(this));
-        uint amountOwed = (amount0 == 0 ? amount1 : amount0) * 1000 / 997;
+        IUniswapV2Pair firstPool = IUniswapV2Pair(msg.sender);
+
+        (uint reserve0, uint reserve1,) = firstPool.getReserves();
+
+        (reserve0, reserve1) = token0 == tokenOut[0] ? (reserve0, reserve1) : (reserve1, reserve0);
+
+        uint amountHave = IERC20(tokenIn[0]).balanceOf(address(this));
+        uint amountOwed = uniswapRouter.getAmountIn(amountIn, reserve0, reserve1);
         require(amountHave > amountOwed, "Not able to return enough amount");
-        address firstPool = uniswapFactory.getPair(tokenIn[0], tokenOut[0]);
-        IERC20(tokenIn[0]).transfer(firstPool, amountOwed);
+        IERC20(tokenIn[0]).transfer(msg.sender, amountOwed);
     }
 
     function withdraw(address token) external onlyOwner {

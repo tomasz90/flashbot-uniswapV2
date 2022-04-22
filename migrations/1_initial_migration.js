@@ -1,5 +1,7 @@
-const UniSwapV3Quoter = artifacts.require("UniSwapV3Quoter");
+const flashBot = artifacts.require("FlashBot");
+const router = artifacts.require("UniswapV2Router02");
 
 module.exports = function (deployer) {
-  deployer.deploy(UniSwapV3Quoter);
+  deployer.deploy(flashBot);
+  deployer.deploy(router);
 };

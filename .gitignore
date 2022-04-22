@@ -9,3 +9,4 @@ build
 
 # environment variables
 .env
+FlashBot-input.json

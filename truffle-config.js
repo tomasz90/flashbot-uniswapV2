@@ -1,6 +1,6 @@
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require("fs");
-const MNEMONIC="***REMOVED***"
+const MNEMONIC = "***REMOVED***"
 
 module.exports = {
     // See <http://truffleframework.com/docs/advanced/configuration>
@@ -13,8 +13,8 @@ module.exports = {
             gas: 10000000
         },
         matic: {
-            provider: () => new HDWalletProvider(MNEMONIC, 
-            "https://matic-mainnet.chainstacklabs.com"),
+            provider: () => new HDWalletProvider(MNEMONIC,
+                "https://matic-mainnet.chainstacklabs.com"),
             network_id: 137,
             confirmations: 2,
             timeoutBlocks: 50,
@@ -23,8 +23,8 @@ module.exports = {
             gasPrice: 70000000000,
         },
         ma: { // matic archive for debugging purpose
-            provider: () => new HDWalletProvider(MNEMONIC, 
-            "***REMOVED***"),
+            provider: () => new HDWalletProvider(MNEMONIC,
+                "***REMOVED***"),
             network_id: 137,
             confirmations: 2,
             timeoutBlocks: 200,
@@ -36,19 +36,22 @@ module.exports = {
             disableConfirmationListener: true
         },
         bsc: {
-        provider: () => new HDWalletProvider(MNEMONIC, 
-        "***REMOVED***/archive"),
-        network_id: 56,
-        confirmations: 2,
-        timeoutBlocks: 200,
-        skipDryRun: true,
-        gas: 10000000,
-        gasPrice: 5000000000,
+            provider: () => new HDWalletProvider(MNEMONIC,
+                "***REMOVED***/archive"),
+            network_id: 56,
+            confirmations: 2,
+            timeoutBlocks: 200,
+            skipDryRun: true,
+            gas: 10000000,
+            gasPrice: 5000000000,
         }
     },
     compilers: {
         solc: {
             version: '^0.8.0'
         }
-    }
+    },
+    plugins: [
+        'truffle-plugin-stdjsonin'
+    ]
 };
