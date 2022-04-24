@@ -21,8 +21,7 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
         for (uint256 i = 0; i < pools.length; i++) {
             IUniswapV2Pair pool = IUniswapV2Pair(pools[i]);
-            (uint256 reserveAmount0, uint256 reserveAmount1, ) = pool
-                .getReserves();
+            (uint256 reserveAmount0, uint256 reserveAmount1, ) = pool.getReserves();
 
             ERC20 erc20_0 = ERC20(pool.token0());
             ERC20 erc20_1 = ERC20(pool.token1());
@@ -68,7 +67,7 @@ contract FlashBot is IUniswapV2Callee, Ownable {
 
         uniswapRouter.swapExactTokensForTokens(
             amountIn,
-            0, // todo: replace with amountOwed, to tests is fine
+            amountOwed, // todo: replace with amountOwed, to tests is fine
             path,
             address(this),
             block.timestamp + 60
