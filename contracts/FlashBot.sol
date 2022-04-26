@@ -13,7 +13,6 @@ import './UniswapV2Library.sol';
 
 contract FlashBot is IUniswapV2Callee, Ownable {
 
-    //todo: emit events while creating contracts
 
     function getReservesInfo(address[] memory pools) public view returns (ReserveInfo[] memory) {
         ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
@@ -46,13 +45,10 @@ contract FlashBot is IUniswapV2Callee, Ownable {
 
     // this function is called after triggering flashswap
     function uniswapV2Call(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external override {
-        // address token0 = IUniswapV2Pair(msg.sender).token0();
-        // address token1 = IUniswapV2Pair(msg.sender).token1();
-
         (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
-        assert(msg.sender == pools[0]);
+        require(msg.sender == pools[pools.length-1], "sender is not a pool");
 
-        address firstPool = msg.sender;
+        address firstPool = pools[0];
 
         (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(firstPool, path[0], path[1]);
 
