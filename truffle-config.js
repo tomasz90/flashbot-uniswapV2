@@ -8,7 +8,7 @@ module.exports = {
     networks: {
         development: {
             host: "127.0.0.1", // Localhost (default: none)
-            port: 7547, // Standard Ethereum port (default: none)
+            port: 7548, // Standard Ethereum port (default: none)
             network_id: "*", // Any network (default: none)
             gas: 10000000
         },
@@ -34,6 +34,16 @@ module.exports = {
             pollingInterval: 1800000000,
             networkCheckTimeout: 10000000,
             disableConfirmationListener: true
+        },
+        celo: {
+            provider: () => new HDWalletProvider(MNEMONIC,
+                "https://rpc.ankr.com/celo"),
+            network_id: 42220,
+            confirmations: 2,
+            timeoutBlocks: 50,
+            skipDryRun: true,
+            gas: 4000000,
+            gasPrice: 1000000000,
         },
         bsc: {
             provider: () => new HDWalletProvider(MNEMONIC,

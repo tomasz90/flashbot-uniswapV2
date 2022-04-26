@@ -9,13 +9,11 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
 
-import './UniswapV2Router02.sol';
-import './ConstantsLibrary.sol';
+import './UniswapV2Library.sol';
 
 contract FlashBot is IUniswapV2Callee, Ownable {
-    
-    IUniswapV2Factory public immutable uniswapFactory = IUniswapV2Factory(ConstantsLibrary.factory);
-    UniswapV2Router02 public immutable uniswapRouter = UniswapV2Router02(ConstantsLibrary.router);
+
+    //todo: emit events while creating contracts
 
     function getReservesInfo(address[] memory pools) public view returns (ReserveInfo[] memory) {
         ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
@@ -38,43 +36,49 @@ contract FlashBot is IUniswapV2Callee, Ownable {
     }
 
     function initSwap(uint amountIn, bytes calldata data) external onlyOwner {
-        (address[] memory path) = abi.decode(data, (address[]));
+        (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
+
+        IUniswapV2Pair pool = IUniswapV2Pair(pools[pools.length-1]);
         
-        IUniswapV2Pair pool = IUniswapV2Pair(uniswapFactory.getPair(path[0], path[path.length-1]));
-
         (uint amount0Out, uint amount1Out) = pool.token0() == path[0] ? (amountIn, 0) : (uint(0), amountIn);
-
         pool.swap(amount0Out, amount1Out, address(this), data);
     }
 
     // this function is called after triggering flashswap
     function uniswapV2Call(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external override {
-        address token0 = IUniswapV2Pair(msg.sender).token0();
-        address token1 = IUniswapV2Pair(msg.sender).token1();
-        assert(msg.sender == IUniswapV2Factory(uniswapFactory).getPair(token0, token1));
+        // address token0 = IUniswapV2Pair(msg.sender).token0();
+        // address token1 = IUniswapV2Pair(msg.sender).token1();
 
-        (address[] memory path) = abi.decode(data, (address[]));
-        IUniswapV2Pair firstPool = IUniswapV2Pair(msg.sender);
+        (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
+        assert(msg.sender == pools[0]);
 
-        (uint reserve0, uint reserve1,) = firstPool.getReserves();
-        (reserve0, reserve1) = token0 == path[0] ? (reserve1, reserve0) : (reserve0, reserve1);
+        address firstPool = msg.sender;
+
+        (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(firstPool, path[0], path[1]);
 
         uint amountIn = amount0 != 0 ? amount0 : amount1;
-        uint amountOwed = uniswapRouter.getAmountIn(amountIn, reserve0, reserve1);
+        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
 
         ERC20 borrowedToken = ERC20(path[0]);
-        borrowedToken.approve(address(uniswapRouter), amountIn);
+        borrowedToken.transfer(address(firstPool), amountIn);
 
-        uniswapRouter.swapExactTokensForTokens(
-            amountIn,
-            amountOwed, // todo: replace with amountOwed, to tests is fine
-            path,
-            address(this),
-            block.timestamp + 60
-        );
+        uint[] memory amounts = UniswapV2Library.getAmountsOut(pools, amountIn, path);
+
+        multiSwap(path, pools, amounts);
 
         address tokenOwed = path[path.length-1];
         ERC20(tokenOwed).transfer(msg.sender, amountOwed);
+    }
+
+    function multiSwap(address[] memory path, address[] memory pools, uint[] memory amounts) internal {
+        for(uint8 i = 0; i < pools.length-1; i++) {
+            (address input, address output) = (path[i], path[i + 1]);
+            (address token0,) = UniswapV2Library.sortTokens(input, output);
+            uint amountOut = amounts[i + 1];
+            (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
+            address to = i < path.length - 2 ? pools[i+1] : address(this);
+            IUniswapV2Pair(pools[i]).swap(amount0Out, amount1Out, to, new bytes(0));
+        }
     }
 
     function withdraw(address token) external onlyOwner {
