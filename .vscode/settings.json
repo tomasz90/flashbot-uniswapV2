@@ -1,0 +1,11 @@
+{
+    "solidity-va.tools.surya.option.negModifiers": false,
+    "solidity-va.preview.markdown": true,
+    "solidity-va.deco.arguments": false,
+    "solidity-va.deco.statevars": true,
+    "solidity-va.outline.extras": true,
+    "solidity-va.outline.decorations": true,
+    "solidity-va.hover": true,
+    "solidity-va.deco.warn.reserved": true,
+    "solidity-va.deco.warn.externalCalls": false
+}

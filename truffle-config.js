@@ -24,7 +24,7 @@ module.exports = {
         },
         ma: { // matic archive for debugging purpose
             provider: () => new HDWalletProvider(MNEMONIC,
-                "***REMOVED***"),
+                "https://polygon-mainnet.g.alchemy.com/v2/HA3UUDJI0ODDNKqyE3xc3jK9zWYJNKb_"),
             network_id: 137,
             confirmations: 2,
             timeoutBlocks: 200,
