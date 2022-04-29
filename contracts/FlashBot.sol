@@ -52,10 +52,8 @@ contract FlashBot is IUniswapV2Callee, Ownable {
 
         (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(firstPool, path[0], path[1]);
 
-        uint amountIn = amount0 != 0 ? amount0 : amount1;
-        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
-
         ERC20 borrowedToken = ERC20(path[0]);
+        uint amountIn = amount0 != 0 ? amount0 : amount1;
         borrowedToken.transfer(address(firstPool), amountIn);
 
         uint[] memory amounts = UniswapV2Library.getAmountsOut(pools, amountIn, path);
@@ -63,6 +61,7 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         multiSwap(path, pools, amounts);
 
         address tokenOwed = path[path.length-1];
+        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
         ERC20(tokenOwed).transfer(msg.sender, amountOwed);
     }
 
