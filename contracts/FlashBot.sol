@@ -48,20 +48,22 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
         require(msg.sender == pools[pools.length-1], "sender is not a pool");
 
-        address firstPool = pools[0];
-
-        (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(firstPool, path[0], path[1]);
-
-        ERC20 borrowedToken = ERC20(path[0]);
         uint amountIn = amount0 != 0 ? amount0 : amount1;
-        borrowedToken.transfer(address(firstPool), amountIn);
+        
+        // return to latest pool aka. 'linking' but in different token than borrowed
+        (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(pools[pools.length-1], path[0], path[1]);
+        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
 
         uint[] memory amounts = UniswapV2Library.getAmountsOut(pools, amountIn, path);
+        require(amounts[amounts.length-1] > amountOwed, "Not enough swap output.");
+
+        ERC20 borrowedToken = ERC20(path[0]);
+        borrowedToken.transfer(address(pools[0]), amountIn);
 
         multiSwap(path, pools, amounts);
 
         address tokenOwed = path[path.length-1];
-        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
+        
         ERC20(tokenOwed).transfer(msg.sender, amountOwed);
     }
 
