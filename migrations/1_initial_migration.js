@@ -1,7 +1,5 @@
-const flashBot = artifacts.require("FlashBot");
-const router = artifacts.require("UniswapV2Router02");
+const Migrations = artifacts.require("Migrations");
 
 module.exports = function (deployer) {
-  deployer.deploy(flashBot);
-  deployer.deploy(router);
+  deployer.deploy(Migrations);
 };

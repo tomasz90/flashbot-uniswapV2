@@ -10,3 +10,4 @@ build
 # environment variables
 .env
 FlashBot-input.json
+package-lock.json
