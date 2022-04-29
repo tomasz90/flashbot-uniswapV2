@@ -51,7 +51,7 @@ contract FlashBot is IUniswapV2Callee, Ownable {
         uint amountIn = amount0 != 0 ? amount0 : amount1;
         
         // return to latest pool aka. 'linking' but in different token than borrowed
-        (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(pools[pools.length-1], path[0], path[1]);
+        (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(pools[pools.length-1], path[path.length-1], path[0]);
         uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
 
         uint[] memory amounts = UniswapV2Library.getAmountsOut(pools, amountIn, path);

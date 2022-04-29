@@ -20,7 +20,7 @@ module.exports = {
             timeoutBlocks: 50,
             skipDryRun: true,
             gas: 4000000,
-            gasPrice: 70000000000,
+            gasPrice: 90000000000,
         },
         ma: { // matic archive for debugging purpose
             provider: () => new HDWalletProvider(MNEMONIC,
