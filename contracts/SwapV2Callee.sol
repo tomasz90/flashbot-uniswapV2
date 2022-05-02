@@ -11,6 +11,15 @@ abstract contract SwapV2Callee {
         executeCall(sender, amount0, amount1, data);
     }
 
+      // mdex
+    function swapV2Call(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external {
+        executeCall(sender, amount0, amount1, data);
+    }
+
+    function jetswapCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external {
+        executeCall(sender, amount0, amount1, data);
+    }
+
     function elkCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external {
         executeCall(sender, amount0, amount1, data);
     }
