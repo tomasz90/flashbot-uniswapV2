@@ -9,9 +9,10 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Callee.sol';
 
+import './SwapV2Callee.sol';
 import './UniswapV2Library.sol';
 
-contract FlashBot is Ownable {
+contract FlashBot is Ownable, SwapV2Callee {
 
     function getReservesInfo(address[] memory pools) public view returns (ReserveInfo[] memory) {
         ReserveInfo[] memory infos = new ReserveInfo[](pools.length);
@@ -43,7 +44,7 @@ contract FlashBot is Ownable {
     }
 
     // this function is called after triggering flashswap
-    function executeCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) internal {
+    function executeCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) internal override {
         (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
         require(msg.sender == pools[pools.length-1], "sender is not a pool");
 
@@ -81,14 +82,6 @@ contract FlashBot is Ownable {
         ERC20 erc20 = ERC20(token);
         uint256 balance = erc20.balanceOf(address(this));
         erc20.transfer(owner(), balance);
-    }
-
-    function uniswapV2Call(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external {
-        executeCall(sender, amount0, amount1, data);
-    }
-
-    function pancakeCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external {
-        executeCall(sender, amount0, amount1, data);
     }
 }
 
