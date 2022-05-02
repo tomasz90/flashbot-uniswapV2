@@ -47,12 +47,12 @@ module.exports = {
         },
         bsc: {
             provider: () => new HDWalletProvider(MNEMONIC,
-                "***REMOVED***/archive"),
+                "***REMOVED***"),
             network_id: 56,
             confirmations: 2,
             timeoutBlocks: 200,
             skipDryRun: true,
-            gas: 10000000,
+            gas: 4000000,
             gasPrice: 5000000000,
         }
     },
