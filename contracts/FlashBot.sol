@@ -35,7 +35,7 @@ contract FlashBot is Ownable, SwapV2Callee {
     }
 
     function initSwap(uint amountIn, bytes calldata data) external onlyOwner {
-        (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
+        (address[] memory path, address[] memory pools,) = abi.decode(data, (address[], address[], uint8[]));
 
         IUniswapV2Pair pool = IUniswapV2Pair(pools[pools.length-1]);
         
@@ -45,16 +45,16 @@ contract FlashBot is Ownable, SwapV2Callee {
 
     // this function is called after triggering flashswap
     function executeCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) internal override {
-        (address[] memory path, address[] memory pools) = abi.decode(data, (address[], address[]));
+        (address[] memory path, address[] memory pools, uint8[] memory poolFees) = abi.decode(data, (address[], address[], uint8[]));
         require(msg.sender == pools[pools.length-1], "sender is not a pool");
 
         uint amountIn = amount0 != 0 ? amount0 : amount1;
         
         // return to latest pool aka. 'linking' but in different token than borrowed
         (uint reserve0, uint reserve1) = UniswapV2Library.getReserves(pools[pools.length-1], path[path.length-1], path[0]);
-        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1);
+        uint amountOwed = UniswapV2Library.getAmountIn(amountIn, reserve0, reserve1, poolFees[poolFees.length-1]);
 
-        uint[] memory amounts = UniswapV2Library.getAmountsOut(pools, amountIn, path);
+        uint[] memory amounts = UniswapV2Library.getAmountsOut(pools, poolFees, amountIn, path);
         require(amounts[amounts.length-1] > amountOwed, "Not enough swap output.");
 
         ERC20 borrowedToken = ERC20(path[0]);

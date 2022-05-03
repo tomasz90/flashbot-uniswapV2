@@ -7,6 +7,10 @@ abstract contract SwapV2Callee {
         executeCall(sender, amount0, amount1, data);
     }
 
+    function apeCall(address sender, uint amount0, uint amount1, bytes calldata data) external {
+        executeCall(sender, amount0, amount1, data);
+    }
+
     function pancakeCall(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external {
         executeCall(sender, amount0, amount1, data);
     }

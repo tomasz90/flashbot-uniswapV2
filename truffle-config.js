@@ -54,6 +54,16 @@ module.exports = {
             skipDryRun: true,
             gas: 4000000,
             gasPrice: 5000000000,
+        },
+        avax: {
+            provider: () => new HDWalletProvider(MNEMONIC,
+                "https://api.avax.network/ext/bc/C/rpc"),
+            network_id: 43114,
+            confirmations: 2,
+            timeoutBlocks: 200,
+            skipDryRun: true,
+            gas: 4000000,
+            gasPrice: 100000000000,
         }
     },
     compilers: {
