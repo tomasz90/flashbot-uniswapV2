@@ -37,13 +37,13 @@ module.exports = {
         },
         celo: {
             provider: () => new HDWalletProvider(MNEMONIC,
-                "https://rpc.ankr.com/celo"),
+                "***REMOVED***"),
             network_id: 42220,
             confirmations: 2,
             timeoutBlocks: 50,
             skipDryRun: true,
             gas: 4000000,
-            gasPrice: 1000000000,
+            gasPrice: 5000000000,
         },
         bsc: {
             provider: () => new HDWalletProvider(MNEMONIC,
