@@ -1,6 +1,6 @@
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require("fs");
-const MNEMONIC = "***REMOVED***"
+require('dotenv').config();
 
 module.exports = {
     // See <http://truffleframework.com/docs/advanced/configuration>
@@ -13,7 +13,7 @@ module.exports = {
             gas: 10000000
         },
         matic: {
-            provider: () => new HDWalletProvider(MNEMONIC,
+            provider: () => new HDWalletProvider(process.env.MNEMONIC,
                 "https://matic-mainnet.chainstacklabs.com"),
             network_id: 137,
             confirmations: 2,
@@ -23,8 +23,8 @@ module.exports = {
             gasPrice: 90000000000,
         },
         ma: { // matic archive for debugging purpose
-            provider: () => new HDWalletProvider(MNEMONIC,
-                "***REMOVED***"),
+            provider: () => new HDWalletProvider(process.env.MNEMONIC,
+                "https://polygon-rpc.com/"),
             network_id: 137,
             confirmations: 2,
             timeoutBlocks: 200,
@@ -36,7 +36,7 @@ module.exports = {
             disableConfirmationListener: true
         },
         celo: {
-            provider: () => new HDWalletProvider(MNEMONIC,
+            provider: () => new HDWalletProvider(process.env.MNEMONIC,
                 "***REMOVED***"),
             network_id: 42220,
             confirmations: 2,
@@ -46,8 +46,8 @@ module.exports = {
             gasPrice: 5000000000,
         },
         bsc: {
-            provider: () => new HDWalletProvider(MNEMONIC,
-                "***REMOVED***"),
+            provider: () => new HDWalletProvider(process.env.MNEMONIC,
+                "https://bsc-dataseed1.binance.org"),
             network_id: 56,
             confirmations: 2,
             timeoutBlocks: 200,
@@ -56,7 +56,7 @@ module.exports = {
             gasPrice: 5000000000,
         },
         avax: {
-            provider: () => new HDWalletProvider(MNEMONIC,
+            provider: () => new HDWalletProvider(process.env.MNEMONIC,
                 "https://api.avax.network/ext/bc/C/rpc"),
             network_id: 43114,
             confirmations: 2,
