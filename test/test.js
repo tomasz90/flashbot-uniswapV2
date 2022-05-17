@@ -13,10 +13,5 @@ contract('FlashBot', (accounts) => {
         let token = '0x0000000000000000000000000000000000000000';
         await assertException(flashBot.withdraw(token, {from: notOwner}), errTypes.revert);
     });
-
-    // it('should init swap', async () => {
-    //     let calldata = fs.readFileSync(process.cwd() + "/test/testPayload.txt").toString();
-    //     await flashBot.withdraw('0x0000000000000000000000000000000000000000', { gasPrice: 11, gasLimit: 1000000});
-    // });
 });
  

@@ -36,14 +36,14 @@ module.exports = {
             disableConfirmationListener: true
         },
         celo: {
-            provider: () => new HDWalletProvider(MNEMONIC,
-                "https://rpc.ankr.com/celo"),
+            provider: () => new HDWalletProvider(process.env.MNEMONIC,
+                "***REMOVED***"),
             network_id: 42220,
             confirmations: 2,
             timeoutBlocks: 50,
             skipDryRun: true,
             gas: 4000000,
-            gasPrice: 1000000000,
+            gasPrice: 5000000000,
         },
         bsc: {
             provider: () => new HDWalletProvider(process.env.MNEMONIC,
@@ -52,7 +52,7 @@ module.exports = {
             confirmations: 2,
             timeoutBlocks: 200,
             skipDryRun: true,
-            gas: 10000000,
+            gas: 4000000,
             gasPrice: 5000000000,
         },
         avax: {
